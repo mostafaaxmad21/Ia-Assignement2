@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cours Complet – Adversarial Search & Oxono</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap');
+
+  :root {
+    --bg: #0f0f13;
+    --surface: #16161d;
+    --surface2: #1e1e28;
+    --border: #2a2a38;
+    --accent: #7c6af7;
+    --accent2: #f7a26a;
+    --accent3: #6af7c0;
+    --danger: #f76a6a;
+    --text: #e2e2ee;
+    --muted: #8888aa;
+    --code-bg: #12121a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.75;
+    font-size: 15px;
+  }
+
+  /* ── SIDEBAR NAV ── */
+  #sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 250px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 24px 0;
+    z-index: 100;
+  }
+
+  #sidebar .logo {
+    padding: 0 20px 20px;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+
+  #sidebar a {
+    display: block;
+    padding: 6px 20px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 12px;
+    transition: all 0.15s;
+  }
+
+  #sidebar a:hover { color: var(--text); background: var(--surface2); }
+  #sidebar a.section {
+    color: var(--text);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding-top: 16px;
+    padding-bottom: 4px;
+    color: var(--accent2);
+  }
+  #sidebar a.sub { padding-left: 32px; font-size: 11px; }
+
+  /* ── MAIN CONTENT ── */
+  #main {
+    margin-left: 250px;
+    padding: 60px 80px;
+    max-width: 960px;
+  }
+
+  /* ── TYPOGRAPHY ── */
+  h1 {
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 16px;
+    margin-bottom: 48px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  h2 {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 56px 0 20px;
+    color: var(--accent2);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  h2 .num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    background: rgba(124,106,247,0.12);
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 36px 0 12px;
+    color: var(--accent3);
+  }
+
+  h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 24px 0 8px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  p { margin-bottom: 14px; }
+
+  strong { color: var(--accent2); font-weight: 600; }
+  em { color: var(--accent3); font-style: italic; }
+
+  /* ── BOXES ── */
+  .box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 20px 0;
+  }
+
+  .box.accent { border-left: 3px solid var(--accent); }
+  .box.warning { border-left: 3px solid var(--danger); background: rgba(247,106,106,0.05); }
+  .box.tip { border-left: 3px solid var(--accent3); background: rgba(106,247,192,0.05); }
+  .box.algo { border-left: 3px solid var(--accent2); }
+
+  .box-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+  .box.accent .box-title { color: var(--accent); }
+  .box.warning .box-title { color: var(--danger); }
+  .box.tip .box-title { color: var(--accent3); }
+  .box.algo .box-title { color: var(--accent2); }
+
+  /* ── CODE ── */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    margin: 16px 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    background: rgba(124,106,247,0.15);
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: var(--accent3);
+  }
+
+  pre code {
+    background: none;
+    padding: 0;
+    color: var(--text);
+  }
+
+  .kw { color: #c792ea; }
+  .fn { color: #82aaff; }
+  .str { color: #c3e88d; }
+  .cmt { color: var(--muted); font-style: italic; }
+  .num-lit { color: #f78c6c; }
+  .var { color: var(--accent3); }
+
+  /* ── TABLES ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  th {
+    background: var(--surface2);
+    color: var(--accent2);
+    font-weight: 600;
+    padding: 10px 14px;
+    text-align: left;
+    border: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+  }
+  td {
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+  /* ── LISTS ── */
+  ul, ol {
+    padding-left: 24px;
+    margin-bottom: 14px;
+  }
+  li { margin-bottom: 6px; }
+  li > ul, li > ol { margin-top: 6px; margin-bottom: 6px; }
+
+  /* ── CHECKLIST ── */
+  .checklist { list-style: none; padding-left: 0; }
+  .checklist li::before {
+    content: '☐ ';
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ── TAGS ── */
+  .tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-right: 6px;
+  }
+  .tag.minimax { background: rgba(124,106,247,0.2); color: var(--accent); }
+  .tag.alphabeta { background: rgba(247,162,106,0.2); color: var(--accent2); }
+  .tag.mcts { background: rgba(106,247,192,0.2); color: var(--accent3); }
+  .tag.oxono { background: rgba(247,106,106,0.2); color: var(--danger); }
+
+  /* ── DIVIDER ── */
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 40px 0;
+  }
+
+  /* ── GAME TREE DIAGRAM (real tree layout) ── */
+  .tree {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 12px;
+    overflow-x: auto;
+    margin: 16px 0;
+  }
+  .tree ul {
+    padding-top: 20px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin: 0;
+    padding-left: 0;
+  }
+  .tree > ul { min-width: 700px; }
+  .tree li {
+    list-style-type: none;
+    text-align: center;
+    position: relative;
+    padding: 20px 8px 0;
+    margin: 0;
+  }
+  .tree li::before,
+  .tree li::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 50%;
+    border-top: 1px solid var(--border);
+    width: 50%;
+    height: 20px;
+  }
+  .tree li::after {
+    right: auto;
+    left: 50%;
+    border-left: 1px solid var(--border);
+  }
+  .tree li:only-child::before,
+  .tree li:only-child::after {
+    display: none;
+  }
+  .tree li:only-child { padding-top: 0; }
+  .tree li:first-child::before,
+  .tree li:last-child::after {
+    border: 0 none;
+  }
+  .tree li:last-child::before {
+    border-right: 1px solid var(--border);
+    border-radius: 0 6px 0 0;
+  }
+  .tree li:first-child::after {
+    border-radius: 6px 0 0 0;
+  }
+  .tree ul ul::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    border-left: 1px solid var(--border);
+    width: 0;
+    height: 20px;
+  }
+  .tree .node {
+    display: inline-block;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.02);
+    white-space: nowrap;
+    min-width: 70px;
+  }
+  .tree .max-node { color: #82aaff; }
+  .tree .min-node { color: #f76a6a; }
+  .tree .leaf {
+    color: #c3e88d;
+    min-width: 44px;
+  }
+  .tree .cut {
+    color: #ffcb6b;
+    border-style: dashed;
+    min-width: 88px;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    #sidebar { display: none; }
+    #main { margin-left: 0; padding: 30px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <div class="logo">AI · Adversarial Search</div>
+  <a class="section" href="#objectifs">Analyse</a>
+  <a href="#objectifs">Objectifs du projet</a>
+  <a href="#competences">Compétences requises</a>
+  <a class="section" href="#notions">Notions clés</a>
+  <a class="sub" href="#jeux">Jeu &amp; arbre de jeu</a>
+  <a class="sub" href="#utility">Fonction d'utilité</a>
+  <a class="sub" href="#evalfunc">Fonction d'évaluation</a>
+  <a class="section" href="#algos">Algorithmes</a>
+  <a class="sub" href="#minimax">Minimax</a>
+  <a class="sub" href="#alphabeta">Alpha-Beta</a>
+  <a class="sub" href="#mcts">MCTS / UCT</a>
+  <a class="section" href="#ameliorations">Améliorations</a>
+  <a class="sub" href="#transpo">Tables de transposition</a>
+  <a class="sub" href="#iterdeep">Iterative Deepening</a>
+  <a class="sub" href="#moveorder">Move Ordering</a>
+  <a class="sub" href="#quiescence">Quiescence</a>
+  <a class="section" href="#code">Vers le code</a>
+  <a class="sub" href="#architecture">Architecture</a>
+  <a class="sub" href="#evaloxono">Éval. pour Oxono</a>
+  <a class="section" href="#pièges">Pièges</a>
+  <a class="section" href="#checklists">Checklists</a>
+</nav>
+
+<main id="main">
+
+<h1>Adversarial Search & Oxono</h1>
+<p class="subtitle">// cours ultra-complet orienté implémentation · LINFO1361 · 2026</p>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="objectifs"><span class="num">01</span> Ce que le projet demande vraiment</h2>
+
+<p>Le projet consiste à coder un agent capable de jouer à <strong>Oxono</strong>, un jeu de stratégie 6×6 à deux joueurs. Ton agent doit hériter de la classe <code>Agent</code> et implémenter la méthode <code>act(state, remaining_time)</code> qui reçoit l'état courant du jeu et doit retourner une action légale.</p>
+
+<div class="box accent">
+  <div class="box-title">📌 Objectifs techniques du projet</div>
+  <ul>
+    <li><strong>Implémenter un algorithme de recherche adversariale</strong> (Minimax, Alpha-Beta, MCTS ou combinaison).</li>
+    <li><strong>Concevoir une fonction d'évaluation</strong> adaptée à Oxono.</li>
+    <li><strong>Gérer le temps</strong> : budget total de 5 minutes par partie — ton agent ne doit jamais dépasser ce budget.</li>
+    <li><strong>Battre des agents de référence</strong> : agent aléatoire, agent glouton, Alpha-Beta de base, MCTS de base.</li>
+    <li><strong>Documenter et expérimenter</strong> pour rédiger un rapport de 5 pages avec ablation study.</li>
+  </ul>
+</div>
+
+<h3 id="competences">Compétences indispensables</h3>
+<ol>
+  <li>Comprendre la <strong>structure d'un jeu à deux joueurs à somme nulle</strong> (arbre de jeu, MAX, MIN).</li>
+  <li>Implémenter <strong>Minimax</strong> récursif sans se tromper sur l'alternance des joueurs.</li>
+  <li>Implémenter <strong>Alpha-Beta pruning</strong> correctement (variables α et β, leur propagation).</li>
+  <li>Comprendre <strong>MCTS en 4 phases</strong> (Sélection, Expansion, Simulation, Backpropagation) et la formule UCT.</li>
+  <li>Concevoir une <strong>fonction d'évaluation heuristique</strong> pour Oxono.</li>
+  <li>Gérer le <strong>temps restant</strong> pour ne jamais dépasser le budget (iterative deepening est la clé).</li>
+</ol>
+
+<div class="box warning">
+  <div class="box-title">⚠ Erreurs de compréhension qui risquent de te bloquer</div>
+  <ul>
+    <li>Confondre <em>qui joue</em> : dans Minimax, le joueur MAX n'est pas toujours le joueur 0 ou "pink". C'est le joueur <em>depuis le point de vue duquel on évalue</em>.</li>
+    <li>Oublier que <strong>Alpha-Beta retourne exactement le même résultat que Minimax</strong> — ce n'est pas une approximation.</li>
+    <li>Dans MCTS, confondre <em>statistiques du nœud</em> et <em>statistiques de l'action</em> : les deux se mettent à jour.</li>
+    <li>Oublier de <strong>copier/cloner l'état</strong> avant d'appliquer une action (le code fourni modifie l'état en place).</li>
+    <li>Croire que MCTS est toujours meilleur qu'Alpha-Beta : ce n'est pas vrai pour tous les jeux.</li>
+  </ul>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="notions"><span class="num">02</span> Notions du cours à maîtriser</h2>
+
+<h3 id="jeux">2.1 — Jeu, Arbre de jeu, et Espace d'états</h3>
+
+<h4>Définition simple</h4>
+<p>Un jeu à deux joueurs peut être modélisé comme un <strong>arbre</strong> : chaque nœud est un <em>état du jeu</em> (position sur le plateau), chaque arête est une <em>action légale</em>, et les feuilles sont les états terminaux (fin de partie).</p>
+
+<h4>Intuition</h4>
+<p>Imagine que tu joues aux Échecs. À chaque coup, tu as plusieurs choix. Ton adversaire a aussi plusieurs choix en réponse. Si tu dessines tous les enchaînements possibles jusqu'à la fin de la partie, tu obtiens un arbre gigantesque : c'est l'<strong>arbre de jeu</strong>. L'IA doit explorer cet arbre pour trouver le meilleur coup.</p>
+
+<h4>Définition formelle d'un jeu (selon le cours)</h4>
+<div class="box">
+  <table>
+    <tr><th>Composante</th><th>Description</th><th>Dans Oxono (code fourni)</th></tr>
+    <tr><td><code>S₀</code></td><td>État initial</td><td>Plateau 6×6 avec Totems au centre</td></tr>
+    <tr><td><code>To-Move(s)</code></td><td>Joueur dont c'est le tour</td><td><code>game.to_move(state)</code></td></tr>
+    <tr><td><code>Actions(s)</code></td><td>Ensemble des coups légaux</td><td><code>game.actions(state)</code></td></tr>
+    <tr><td><code>Result(s,a)</code></td><td>État résultant du coup a dans s</td><td><code>game.apply(state, action)</code> (modifie en place!)</td></tr>
+    <tr><td><code>Is-Terminal(s)</code></td><td>Test de fin de partie</td><td><code>game.is_terminal(state)</code></td></tr>
+    <tr><td><code>Utility(s,p)</code></td><td>Score final pour le joueur p</td><td><code>game.utility(state, player)</code></td></tr>
+  </table>
+</div>
+
+<div class="box warning">
+  <div class="box-title">⚠ Piège critique : apply() modifie l'état en place</div>
+  <p>Dans le code fourni, <code>game.apply(state, action)</code> <strong>modifie directement</strong> l'objet <code>state</code>. Cela signifie que si tu veux explorer plusieurs branches, tu dois <strong>copier l'état avant chaque application</strong>. Regarde dans <code>oxono.py</code> comment copier un état (probablement <code>state.copy()</code> ou <code>copy.deepcopy(state)</code>).</p>
+</div>
+
+<h3 id="utility">2.2 — Fonction d'Utilité vs Fonction d'Évaluation</h3>
+
+<h4>La différence fondamentale</h4>
+<p>Ces deux notions sont souvent confondues mais elles sont très différentes :</p>
+<ul>
+  <li><strong>Fonction d'Utilité <code>Utility(s, p)</code></strong> : valeur <em>exacte</em> d'un état <em>terminal</em>. Elle dit : "si la partie se termine dans cet état, le joueur p a gagné (+1), perdu (-1), ou fait match nul (0)." Elle est <em>définie par les règles du jeu</em>.</li>
+  <li><strong>Fonction d'Évaluation <code>Eval(s, p)</code></strong> : estimation <em>heuristique</em> de la valeur d'un état <em>non-terminal</em>. Elle estime : "si le jeu s'arrêtait ici, à quel point cette position est-elle favorable ?" Elle est <em>inventée par le programmeur</em>.</li>
+</ul>
+
+<div class="box tip">
+  <div class="box-title">💡 Analogie</div>
+  <p>La <strong>fonction d'utilité</strong>, c'est le score final au foot (0-1, résultat officiel). La <strong>fonction d'évaluation</strong>, c'est ce que dirait un commentateur à la mi-temps : "l'équipe A domine avec 60% de possession et 3 tirs cadrés, je leur donne 70% de chances de gagner." C'est une estimation, pas le résultat réel.</p>
+</div>
+
+<h4>Contrainte sur la fonction d'évaluation</h4>
+<p>La fonction d'évaluation doit respecter la contrainte suivante pour être cohérente avec l'utilité :</p>
+<pre><code>UTILITY(défaite, p) ≤ EVAL(s, p) ≤ UTILITY(victoire, p)</code></pre>
+<p>En pratique, si victoire = +1 et défaite = -1, ton évaluation doit rester dans [-1, +1] (ou [-∞, +∞] avec une normalisation cohérente).</p>
+
+<h3 id="evalfunc">2.3 — Concevoir une Fonction d'Évaluation pour Oxono</h3>
+
+<h4>La formule linéaire pondérée (du cours)</h4>
+<p>Le cours recommande une évaluation de la forme :</p>
+<pre><code>E = w₁·f₁ + w₂·f₂ + ... + wₙ·fₙ</code></pre>
+<p>Où chaque <code>fᵢ</code> est une <strong>feature</strong> (caractéristique extraite de l'état) et <code>wᵢ</code> est son <strong>poids</strong> (son importance relative).</p>
+
+<h4>Features utiles pour Oxono</h4>
+<p>Rappel des règles : gagner = aligner 4 pièces de même couleur OU même symbole, horizontalement ou verticalement.</p>
+<div class="box algo">
+  <div class="box-title">🎮 Features candidates pour Oxono</div>
+  <ul>
+    <li><strong>Longueur des alignements partiels :</strong> nombre de lignes de 2, 3 pièces de ta couleur sans blocage.</li>
+    <li><strong>Menaces immédiates :</strong> nombre de lignes où tu as 3 pièces et où la 4ème case est libre.</li>
+    <li><strong>Menaces adverses :</strong> nombre de lignes où l'adversaire a 3 pièces et peut gagner (à bloquer !).</li>
+    <li><strong>Position des Totems :</strong> les Totems déterminent où tu peux poser. Un Totem bien placé donne plus d'options.</li>
+    <li><strong>Mobilité :</strong> nombre de coups légaux disponibles (plus = mieux).</li>
+    <li><strong>Pièces restantes :</strong> combien de pièces X et O tu as encore en réserve.</li>
+    <li><strong>Diversité symboles :</strong> avoir des alignements à la fois par couleur ET par symbole donne plus de chemins vers la victoire.</li>
+  </ul>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="algos"><span class="num">03</span> Algorithmes indispensables</h2>
+
+<!-- ─── MINIMAX ─── -->
+<h3 id="minimax">3.1 — Minimax <span class="tag minimax">Minimax</span></h3>
+
+<h4>a. Le problème qu'il résout</h4>
+<p>Comment un joueur rationnel doit-il choisir son coup, sachant que l'adversaire est aussi rationnel et cherche à le battre ? Minimax répond à cette question en supposant que :</p>
+<ul>
+  <li>Tu (MAX) cherches à <strong>maximiser</strong> ton score.</li>
+  <li>L'adversaire (MIN) cherche à <strong>minimiser</strong> ton score (ce qui équivaut à maximiser le sien dans un jeu à somme nulle).</li>
+</ul>
+
+<h4>b. L'idée générale</h4>
+<p>Explore tout l'arbre de jeu jusqu'aux feuilles. Remonte les valeurs en appliquant MAX aux nœuds de ton tour, MIN aux nœuds du tour adverse. Le coup à la racine qui mène au meilleur résultat est le coup optimal.</p>
+
+<h4>c. Fonctionnement détaillé, étape par étape</h4>
+<ol>
+  <li><strong>Génère l'arbre de jeu</strong> jusqu'aux états terminaux (ou jusqu'à une profondeur limite).</li>
+  <li><strong>Évalue les feuilles</strong> avec la fonction d'utilité (ou d'évaluation si profondeur limitée).</li>
+  <li><strong>Remonte les valeurs</strong> : un nœud MAX prend le <em>maximum</em> des valeurs de ses enfants ; un nœud MIN prend le <em>minimum</em>.</li>
+  <li><strong>À la racine</strong>, choisis le coup qui mène au nœud enfant avec la valeur la plus haute.</li>
+</ol>
+
+<h4>d. Exécution manuelle sur un exemple jouet</h4>
+<p>Considère cet arbre (profondeur 2) :</p>
+<div class="tree">
+  <ul>
+    <li>
+      <span class="node max-node">MAX : 4</span>
+      <ul>
+        <li>
+          <span class="node min-node">MIN : 3</span>
+          <ul>
+            <li><span class="node leaf">3</span></li>
+            <li><span class="node leaf">12</span></li>
+          </ul>
+        </li>
+        <li>
+          <span class="node min-node">MIN : 2</span>
+          <ul>
+            <li><span class="node leaf">8</span></li>
+            <li><span class="node leaf">2</span></li>
+          </ul>
+        </li>
+        <li>
+          <span class="node min-node">MIN : 4</span>
+          <ul>
+            <li><span class="node leaf">6</span></li>
+            <li><span class="node leaf">4</span></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+<p>Étape 1 — Calcul des nœuds MIN (ils prennent le minimum de leurs enfants) :</p>
+<ul>
+  <li>Nœud MIN gauche : min(3, 12) = <strong>3</strong></li>
+  <li>Nœud MIN milieu : min(8, 2) = <strong>2</strong></li>
+  <li>Nœud MIN droite : min(6, 4) = <strong>4</strong></li>
+</ul>
+<p>Étape 2 — Calcul du nœud MAX (il prend le maximum de ses enfants) :</p>
+<ul>
+  <li>Nœud MAX racine : max(3, 2, 4) = <strong>4</strong></li>
+</ul>
+<p>Conclusion : le joueur MAX choisit le 3ème coup (valeur 4).</p>
+
+<h4>e. Pseudo-code</h4>
+<pre><code><span class="kw">function</span> <span class="fn">minimax</span>(state, game, player):
+    <span class="kw">if</span> game.is_terminal(state):
+        <span class="kw">return</span> game.utility(state, player), <span class="kw">None</span>
+    
+    best_action = <span class="kw">None</span>
+    
+    <span class="kw">if</span> game.to_move(state) == player:  <span class="cmt"># C'est le tour de MAX</span>
+        best_value = <span class="num-lit">-infinity</span>
+        <span class="kw">for</span> action <span class="kw">in</span> game.actions(state):
+            new_state = state.copy()
+            game.apply(new_state, action)
+            value, _ = <span class="fn">minimax</span>(new_state, game, player)
+            <span class="kw">if</span> value > best_value:
+                best_value = value
+                best_action = action
+        <span class="kw">return</span> best_value, best_action
+    
+    <span class="kw">else</span>:  <span class="cmt"># C'est le tour de MIN (l'adversaire)</span>
+        best_value = <span class="num-lit">+infinity</span>
+        <span class="kw">for</span> action <span class="kw">in</span> game.actions(state):
+            new_state = state.copy()
+            game.apply(new_state, action)
+            value, _ = <span class="fn">minimax</span>(new_state, game, player)
+            <span class="kw">if</span> value < best_value:
+                best_value = value
+                best_action = action
+        <span class="kw">return</span> best_value, best_action</code></pre>
+
+<h4>f. Explication ligne par ligne</h4>
+<ul>
+  <li><code>player</code> est le joueur depuis <em>dont on maximise le score</em> — il reste fixe pendant toute la récursion.</li>
+  <li><code>game.to_move(state)</code> dit <em>qui joue maintenant</em> dans l'état courant — ça change à chaque niveau.</li>
+  <li>Si <code>to_move == player</code>, c'est le tour de MAX → on cherche le maximum.</li>
+  <li>Sinon, c'est le tour de MIN (l'adversaire) → on cherche le minimum.</li>
+  <li><code>state.copy()</code> est essentiel : on ne veut pas modifier l'état original.</li>
+  <li>La valeur retournée à la racine est la valeur minimax, le meilleur résultat garanti.</li>
+</ul>
+
+<h4>g. Structures de données utilisées</h4>
+<ul>
+  <li><strong>État du jeu</strong> (<code>State</code>) : représentation complète du plateau à un instant donné.</li>
+  <li><strong>Pile d'appels récursifs</strong> : Minimax est naturellement récursif, la pile Python stocke les états intermédiaires.</li>
+  <li><strong>best_value / best_action</strong> : deux variables locales à chaque nœud.</li>
+</ul>
+
+<h4>h. Complexité</h4>
+<table>
+  <tr><th>Mesure</th><th>Valeur</th><th>Explication</th></tr>
+  <tr><td>Temps</td><td>O(bᵐ)</td><td>b = facteur de branchement, m = profondeur. Pour Oxono : b peut être >100, m=4 → des millions de nœuds.</td></tr>
+  <tr><td>Espace</td><td>O(b·m)</td><td>Pile récursive de profondeur m, b états par niveau.</td></tr>
+</table>
+
+<div class="box warning">
+  <div class="box-title">⚠ Minimax pur est inutilisable dans Oxono</div>
+  <p>Avec un facteur de branchement d'environ 50-200 coups légaux et une profondeur de jeu de 30+ coups, Minimax pur ne pourra jamais terminer en temps raisonnable. Il faut <strong>impérativement</strong> le coupler avec une limite de profondeur ET Alpha-Beta.</p>
+</div>
+
+<!-- ─── ALPHA-BETA ─── -->
+<h3 id="alphabeta">3.2 — Alpha-Beta Pruning <span class="tag alphabeta">Alpha-Beta</span></h3>
+
+<h4>a. Le problème qu'il résout</h4>
+<p>Minimax explore <em>tous</em> les nœuds, même ceux qui ne peuvent <em>pas</em> changer le résultat. Alpha-Beta élague (supprime) ces branches inutiles, rendant la recherche beaucoup plus efficace — tout en garantissant <strong>exactement le même résultat que Minimax</strong>.</p>
+
+<h4>b. L'idée générale</h4>
+<p>Pendant la recherche, on maintient deux bornes :</p>
+<ul>
+  <li><strong>α (alpha)</strong> : "le meilleur score que MAX peut garantir jusqu'ici" — une borne inférieure. Si on trouve un nœud MIN dont la valeur est ≤ α, MAX ne l'atteindra jamais (il a déjà mieux ailleurs).</li>
+  <li><strong>β (beta)</strong> : "le meilleur score que MIN peut garantir jusqu'ici" — une borne supérieure. Si on trouve un nœud MAX dont la valeur est ≥ β, MIN ne l'atteindra jamais (il a déjà mieux ailleurs).</li>
+</ul>
+
+<div class="box tip">
+  <div class="box-title">💡 Intuition avec une analogie</div>
+  <p>Tu magasines et tu as déjà trouvé un article à 50€ (c'est ton α : tu peux avoir ce prix). Tu regardes un autre magasin et le vendeur te montre son premier article à 80€. Même sans regarder le reste du catalogue, tu sais que ce magasin ne peut qu'être plus cher (MIN ne peut que baisser son score). Tu pars. C'est un élagage beta.</p>
+</div>
+
+<h4>c. Fonctionnement détaillé</h4>
+<p>Alpha-Beta est Minimax avec deux paramètres supplémentaires transmis à chaque appel récursif :</p>
+<ul>
+  <li>Au début : α = -∞, β = +∞.</li>
+  <li>À chaque nœud MAX : si on trouve une valeur v > β, on coupe (β-cutoff).</li>
+  <li>À chaque nœud MIN : si on trouve une valeur v < α, on coupe (α-cutoff).</li>
+  <li>On met à jour α (dans les nœuds MAX) et β (dans les nœuds MIN) en remontant.</li>
+</ul>
+
+<h4>d. Exécution manuelle</h4>
+<p>Reprends l'arbre précédent avec α-β :</p>
+
+<div class="tree">
+  <ul>
+    <li>
+      <span class="node max-node">MAX [α=-∞, β=+∞] → 4</span>
+      <ul>
+        <li>
+          <span class="node min-node">MIN [α=-∞, β=+∞] → 3</span>
+          <ul>
+            <li><span class="node leaf">3</span></li>
+            <li><span class="node leaf">12</span></li>
+          </ul>
+        </li>
+        <li>
+          <span class="node min-node">MIN [α=3, β=+∞] → 2</span>
+          <ul>
+            <li><span class="node leaf">8</span></li>
+            <li><span class="node cut">✂ coupé (2)</span></li>
+          </ul>
+        </li>
+        <li>
+          <span class="node min-node">MIN [α=4, β=+∞] → 4</span>
+          <ul>
+            <li><span class="node leaf">6</span></li>
+            <li><span class="node cut">✂ coupé (4)</span></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+<p><strong>Étape 1</strong> : Explore nœud MIN gauche. Voit 3 → β=3. Voit 12 → max(3,12)=12 > β=3, non, en fait le MIN prend 3. Retourne 3. MAX met α = max(-∞, 3) = 3.</p>
+<p><strong>Étape 2</strong> : Explore nœud MIN milieu. Voit 8 → β=8. Mais α=3 et on est en MIN, donc β devient 8. La valeur 8 > α=3 mais c'est le tour de MIN... Voit le deuxième enfant : si sa valeur était 2, MIN retournerait 2 (< α=3 = élagage α !). En fait ici 2 < α=3 → élagage. MIN retourne 2. MAX ne met pas à jour α (2 < α=3).</p>
+<p><strong>Étape 3</strong> : Explore nœud MIN droite. Voit 6 → si valeur < α=3 → élagage. 6 > 3 pas d'élagage ici. Mais avec 4, on aurait α=4 après avoir vu le nœud milieu valant 4... Dans l'exemple original les valeurs sont 6 et 4 → MIN retourne 4. MAX met α = max(3,4) = 4.</p>
+<p>Résultat final : 4. Identique à Minimax, avec moins de nœuds explorés.</p>
+
+<h4>e. Pseudo-code complet avec limite de profondeur</h4>
+<pre><code><span class="kw">function</span> <span class="fn">alphabeta</span>(state, depth, alpha, beta, player, game, eval_fn):
+    <span class="cmt"># Cas terminal : état de fin de partie</span>
+    <span class="kw">if</span> game.is_terminal(state):
+        <span class="kw">return</span> game.utility(state, player), <span class="kw">None</span>
+    
+    <span class="cmt"># Cas de coupure : profondeur limite atteinte</span>
+    <span class="kw">if</span> depth == <span class="num-lit">0</span>:
+        <span class="kw">return</span> <span class="fn">eval_fn</span>(state, player), <span class="kw">None</span>
+    
+    best_action = <span class="kw">None</span>
+    
+    <span class="kw">if</span> game.to_move(state) == player:  <span class="cmt"># Nœud MAX</span>
+        value = <span class="num-lit">-float('inf')</span>
+        <span class="kw">for</span> action <span class="kw">in</span> game.actions(state):
+            new_state = state.copy()
+            game.apply(new_state, action)
+            child_val, _ = <span class="fn">alphabeta</span>(new_state, depth-<span class="num-lit">1</span>, alpha, beta, player, game, eval_fn)
+            <span class="kw">if</span> child_val > value:
+                value = child_val
+                best_action = action
+            alpha = <span class="fn">max</span>(alpha, value)
+            <span class="kw">if</span> value >= beta:  <span class="cmt"># β-cutoff</span>
+                <span class="kw">break</span>
+        <span class="kw">return</span> value, best_action
+    
+    <span class="kw">else</span>:  <span class="cmt"># Nœud MIN</span>
+        value = <span class="num-lit">+float('inf')</span>
+        <span class="kw">for</span> action <span class="kw">in</span> game.actions(state):
+            new_state = state.copy()
+            game.apply(new_state, action)
+            child_val, _ = <span class="fn">alphabeta</span>(new_state, depth-<span class="num-lit">1</span>, alpha, beta, player, game, eval_fn)
+            <span class="kw">if</span> child_val < value:
+                value = child_val
+                best_action = action
+            beta = <span class="fn">min</span>(beta, value)
+            <span class="kw">if</span> value <= alpha:  <span class="cmt"># α-cutoff</span>
+                <span class="kw">break</span>
+        <span class="kw">return</span> value, best_action</code></pre>
+
+<h4>f. Explication ligne par ligne</h4>
+<ul>
+  <li><strong>Cas terminal</strong> : si la partie est finie, retourne la vraie valeur (pas l'heuristique). Ne jamais appeler l'éval sur un état terminal.</li>
+  <li><strong>depth == 0</strong> : profondeur limite → retourne l'heuristique. C'est ici que ta fonction d'évaluation entre en jeu.</li>
+  <li><strong><code>alpha = max(alpha, value)</code></strong> dans un nœud MAX : met à jour la borne inférieure. Traduit : "j'ai maintenant la garantie d'avoir au moins cette valeur."</li>
+  <li><strong><code>if value >= beta: break</code></strong> : élagage beta. Si j'ai déjà trouvé une valeur ≥ β (ce que MIN peut garantir), MIN n'autorisera jamais ce chemin. Inutile de continuer.</li>
+  <li>Symétrie pour le nœud MIN avec beta et l'élagage alpha.</li>
+  <li>⚠ Note : <code>alpha</code> et <code>beta</code> sont transmis <em>par valeur</em> (pas par référence) dans les appels récursifs — la mise à jour d'alpha dans un nœud MAX ne modifie pas les alpha des autres branches au même niveau. C'est correct.</li>
+</ul>
+
+<h4>g. Propriétés importantes</h4>
+<table>
+  <tr><th>Propriété</th><th>Valeur / Description</th></tr>
+  <tr><td>Résultat</td><td><strong>Identique à Minimax</strong> — aucune approximation</td></tr>
+  <tr><td>Complexité (meilleur cas)</td><td>O(b^(m/2)) — on peut aller 2× plus loin</td></tr>
+  <tr><td>Complexité (cas moyen)</td><td>O(b^(3m/4))</td></tr>
+  <tr><td>Complexité (pire cas)</td><td>O(bᵐ) — sans aucun élagage</td></tr>
+  <tr><td>Gain pratique</td><td>Avec bonne ordonnance des coups : branching factor √b au lieu de b</td></tr>
+</table>
+
+<div class="box tip">
+  <div class="box-title">💡 L'ordonnance des coups est cruciale</div>
+  <p>Si tu explores les <em>meilleurs</em> coups en premier, Alpha-Beta élague beaucoup plus. C'est pourquoi le <strong>Move Ordering</strong> (tri des coups par qualité avant de les explorer) est une des améliorations les plus importantes. Par exemple, trier les coups par valeur d'évaluation rapide, ou essayer d'abord les coups qui créent des alignements.</p>
+</div>
+
+<!-- ─── MCTS ─── -->
+<h3 id="mcts">3.3 — Monte Carlo Tree Search (MCTS) <span class="tag mcts">MCTS</span></h3>
+
+<h4>a. Le problème qu'il résout</h4>
+<p>Alpha-Beta est limité par la nécessité d'une bonne fonction d'évaluation ET par le grand facteur de branchement. MCTS contourne ces deux limitations : il n'a <em>pas besoin</em> d'une fonction d'évaluation et gère bien les grands espaces d'états. Il estime la valeur d'un état par simulation aléatoire de parties complètes.</p>
+
+<h4>b. L'idée générale</h4>
+<p>Au lieu d'évaluer une position avec une heuristique, MCTS joue des centaines/milliers de parties aléatoires depuis cette position et regarde combien de fois chaque joueur gagne. La fraction de victoires est une estimation de la valeur de la position.</p>
+
+<div class="box tip">
+  <div class="box-title">💡 Analogie du joueur de poker</div>
+  <p>Tu ne sais pas exactement quelle main est meilleure, mais tu peux simuler 1000 parties depuis ta position actuelle. Si tu gagnes 700 fois, ta main vaut environ 0.7. C'est l'idée de MCTS.</p>
+</div>
+
+<h4>c. Les 4 phases de MCTS</h4>
+
+<div class="box algo">
+  <div class="box-title">🔄 Phase 1 : Sélection</div>
+  <p>Depuis la racine, descend dans l'arbre en choisissant à chaque nœud l'enfant avec la plus haute valeur UCT (formule ci-dessous). Continue jusqu'à atteindre un nœud non entièrement expansé (il lui manque des enfants) ou un nœud terminal.</p>
+  <p><strong>Critère UCT (Upper Confidence bound for Trees) :</strong></p>
+  <pre><code>UCT(nœud) = Q(nœud)/N(nœud) + C × √(ln(N(parent)) / N(nœud))</code></pre>
+  <ul>
+    <li><code>Q(nœud)/N(nœud)</code> : taux de victoire moyen (exploitation)</li>
+    <li><code>C × √(ln(N(parent)) / N(nœud))</code> : terme d'exploration (nœuds peu visités ont un bonus élevé)</li>
+    <li><code>C</code> : constante d'exploration (théoriquement √2 ≈ 1.41, à ajuster empiriquement)</li>
+  </ul>
+</div>
+
+<div class="box algo">
+  <div class="box-title">🌱 Phase 2 : Expansion</div>
+  <p>Depuis le nœud sélectionné, ajoute un (ou plusieurs) nouveaux nœuds enfants correspondant à des actions non encore explorées. Retourne ce nouveau nœud.</p>
+</div>
+
+<div class="box algo">
+  <div class="box-title">🎲 Phase 3 : Simulation (Playout / Rollout)</div>
+  <p>Depuis le nouveau nœud, joue une partie aléatoire (ou semi-aléatoire avec une <em>rollout policy</em>) jusqu'à un état terminal. Note le résultat (1 = victoire, 0 = défaite, 0.5 = nul).</p>
+  <p>La <em>rollout policy</em> peut être améliorée pour biaiser les simulations vers des coups "raisonnables" plutôt que vraiment aléatoires.</p>
+</div>
+
+<div class="box algo">
+  <div class="box-title">⬆ Phase 4 : Backpropagation</div>
+  <p>Remonte le résultat depuis le nœud simulé jusqu'à la racine, en mettant à jour pour chaque nœud traversé :</p>
+  <ul>
+    <li><code>N(nœud) += 1</code> (nombre de visites)</li>
+    <li><code>Q(nœud) += résultat</code> (somme des gains) — attention : inverser le résultat selon le joueur au nœud !</li>
+  </ul>
+</div>
+
+<h4>d. Pseudo-code MCTS complet</h4>
+<pre><code><span class="kw">class</span> <span class="fn">MCTSNode</span>:
+    state         <span class="cmt"># état du jeu</span>
+    parent        <span class="cmt"># nœud parent (None pour la racine)</span>
+    action        <span class="cmt"># action qui a mené à cet état</span>
+    children      <span class="cmt"># liste des enfants</span>
+    N = <span class="num-lit">0</span>         <span class="cmt"># nombre de visites</span>
+    Q = <span class="num-lit">0.0</span>       <span class="cmt"># somme des résultats (gains)</span>
+    untried_actions  <span class="cmt"># actions non encore explorées</span>
+
+<span class="kw">function</span> <span class="fn">uct_value</span>(node, C=<span class="num-lit">1.41</span>):
+    <span class="kw">if</span> node.N == <span class="num-lit">0</span>: <span class="kw">return</span> <span class="num-lit">+infinity</span>  <span class="cmt"># jamais visité → priorité max</span>
+    <span class="kw">return</span> node.Q / node.N + C * sqrt(log(node.parent.N) / node.N)
+
+<span class="kw">function</span> <span class="fn">select</span>(node):
+    <span class="cmt"># Descend jusqu'à un nœud non entièrement expansé</span>
+    <span class="kw">while</span> not node.untried_actions <span class="kw">and</span> node.children:
+        node = <span class="fn">max</span>(node.children, key=<span class="fn">uct_value</span>)
+    <span class="kw">return</span> node
+
+<span class="kw">function</span> <span class="fn">expand</span>(node, game):
+    action = node.untried_actions.pop()  <span class="cmt"># choisit une action non testée</span>
+    new_state = node.state.copy()
+    game.apply(new_state, action)
+    child = MCTSNode(state=new_state, parent=node, action=action,
+                     untried_actions=game.actions(new_state))
+    node.children.append(child)
+    <span class="kw">return</span> child
+
+<span class="kw">function</span> <span class="fn">simulate</span>(state, game, player):
+    <span class="cmt"># Playout aléatoire jusqu'à état terminal</span>
+    state = state.copy()
+    <span class="kw">while not</span> game.is_terminal(state):
+        action = random.choice(game.actions(state))
+        game.apply(state, action)
+    <span class="kw">return</span> game.utility(state, player)  <span class="cmt"># 1 si player gagne, -1 sinon</span>
+
+<span class="kw">function</span> <span class="fn">backpropagate</span>(node, result):
+    <span class="kw">while</span> node <span class="kw">is not</span> None:
+        node.N += <span class="num-lit">1</span>
+        node.Q += result
+        result = -result  <span class="cmt"># IMPORTANT : inverser pour l'adversaire</span>
+        node = node.parent
+
+<span class="kw">function</span> <span class="fn">mcts_decision</span>(state, game, player, time_budget):
+    root = MCTSNode(state=state.copy(), parent=None, action=None,
+                    untried_actions=game.actions(state))
+    
+    start = current_time()
+    <span class="kw">while</span> current_time() - start < time_budget:
+        <span class="cmt"># 1. Sélection</span>
+        node = <span class="fn">select</span>(root)
+        
+        <span class="cmt"># 2. Expansion (si pas terminal)</span>
+        <span class="kw">if not</span> game.is_terminal(node.state) <span class="kw">and</span> node.untried_actions:
+            node = <span class="fn">expand</span>(node, game)
+        
+        <span class="cmt"># 3. Simulation</span>
+        result = <span class="fn">simulate</span>(node.state, game, player)
+        
+        <span class="cmt"># 4. Backpropagation</span>
+        <span class="fn">backpropagate</span>(node, result)
+    
+    <span class="cmt"># Retourne l'action de l'enfant le plus visité</span>
+    best_child = <span class="fn">max</span>(root.children, key=<span class="kw">lambda</span> c: c.N)
+    <span class="kw">return</span> best_child.action</code></pre>
+
+<h4>e. Explication ligne par ligne des points critiques</h4>
+
+<p><strong>Pourquoi <code>result = -result</code> dans backpropagate ?</strong><br>
+Parce que les nœuds alternent entre MAX et MIN. Si ton joueur vient de gagner (result=1), son parent (adversaire) a perdu (result=-1). En inversant à chaque remontée, on s'assure que chaque nœud accumule les résultats <em>du point de vue du joueur qui joue à ce nœud</em>.</p>
+
+<p><strong>Pourquoi choisir l'enfant le plus <em>visité</em> (pas le plus haut Q/N) à la fin ?</strong><br>
+L'enfant le plus visité est celui sur lequel l'algorithme a concentré sa recherche. Un grand N indique une confiance accumulée sur de nombreuses simulations, ce qui est plus robuste qu'une valeur Q/N basée sur peu de simulations.</p>
+
+<p><strong>La constante C dans UCT :</strong><br>
+C = √2 est la valeur théorique. En pratique, il faut souvent l'ajuster selon le jeu. Si C est trop grand → trop d'exploration, jamais d'exploitation. Si C est trop petit → exploitation greedy, risque de rater de bonnes branches.</p>
+
+<h4>f. Complexité et caractéristiques</h4>
+<table>
+  <tr><th>Caractéristique</th><th>Description</th></tr>
+  <tr><td>Anytime</td><td>Peut être arrêté n'importe quand et retourne le meilleur coup trouvé jusqu'ici.</td></tr>
+  <tr><td>Pas besoin d'évaluation</td><td>Fonctionne même sans fonction heuristique (playout aléatoire suffit).</td></tr>
+  <tr><td>Gère les grands arbres</td><td>Bon pour les jeux à grand facteur de branchement (Go, etc.).</td></tr>
+  <tr><td>Faiblesse tactique</td><td>Peut rater des combinaisons tactiques profondes (un seul coup décisif).</td></tr>
+</table>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="ameliorations"><span class="num">04</span> Améliorations importantes</h2>
+
+<h3 id="iterdeep">4.1 — Iterative Deepening</h3>
+<p>Au lieu de chercher directement à profondeur d, on cherche d'abord à profondeur 1, puis 2, puis 3, etc. On s'arrête quand le temps est écoulé et on retourne le meilleur coup trouvé à la dernière profondeur complète.</p>
+
+<pre><code><span class="kw">function</span> <span class="fn">iterative_deepening_alphabeta</span>(state, game, player, time_budget):
+    best_action = random.choice(game.actions(state))  <span class="cmt"># fallback</span>
+    start = current_time()
+    depth = <span class="num-lit">1</span>
+    
+    <span class="kw">while</span> current_time() - start < time_budget:
+        value, action = <span class="fn">alphabeta</span>(state, depth, -inf, +inf, player, game, eval_fn)
+        <span class="kw">if</span> action <span class="kw">is not</span> None:
+            best_action = action
+        depth += <span class="num-lit">1</span>
+    
+    <span class="kw">return</span> best_action</code></pre>
+
+<div class="box tip">
+  <div class="box-title">💡 Pourquoi iterative deepening est essentiel pour le projet</div>
+  <p>Avec un budget de 5 minutes par partie et un facteur de branchement variable, tu ne peux pas prédire exactement quelle profondeur sera accessible. Iterative Deepening garantit que tu as <em>toujours</em> une réponse valide (le meilleur coup à la profondeur d-1) même si le temps expire pendant la recherche à profondeur d.</p>
+</div>
+
+<h3 id="transpo">4.2 — Tables de Transposition</h3>
+<p>De nombreux états peuvent être atteints par différentes séquences de coups. Sans transposition table, on les recalcule à chaque fois. Avec une table de hachage, on stocke les valeurs déjà calculées.</p>
+
+<pre><code>transposition_table = {}  <span class="cmt"># dict: hash(state) → (valeur, profondeur, flag, meilleur_coup)</span>
+
+<span class="cmt"># Dans alphabeta, au début :</span>
+key = hash_state(state)
+<span class="kw">if</span> key <span class="kw">in</span> transposition_table:
+    stored = transposition_table[key]
+    <span class="kw">if</span> stored.depth >= depth:  <span class="cmt"># calculé à profondeur suffisante</span>
+        <span class="kw">if</span> stored.flag == EXACT: <span class="kw">return</span> stored.value, stored.move
+        <span class="kw">if</span> stored.flag == LOWER: alpha = max(alpha, stored.value)
+        <span class="kw">if</span> stored.flag == UPPER: beta = min(beta, stored.value)
+        <span class="kw">if</span> alpha >= beta: <span class="kw">return</span> stored.value, stored.move</code></pre>
+
+<p>Le <strong>Zobrist Hashing</strong> est une technique efficace pour hasher un état de jeu : on assigne à chaque (case, pièce) un nombre aléatoire, et le hash est le XOR de tous ces nombres pour les pièces en jeu. Mettre à jour le hash après un coup est O(1) (XOR avec les pièces déplacées).</p>
+
+<h3 id="moveorder">4.3 — Move Ordering</h3>
+<p>Trier les coups avant de les explorer améliore drastiquement l'élagage Alpha-Beta. Stratégies :</p>
+<ul>
+  <li><strong>Killer moves</strong> : mémoriser les coups qui ont causé des élagages récemment et les essayer en premier.</li>
+  <li><strong>Évaluation rapide</strong> : calculer une version light de l'évaluation pour trier les coups.</li>
+  <li><strong>Coups gagnants d'abord</strong> : pour Oxono, essaie d'abord les coups qui créent un alignement de 3 ou complètent un alignement de 4.</li>
+</ul>
+
+<h3 id="quiescence">4.4 — Quiescence Search</h3>
+<p>L'<strong>effet d'horizon</strong> : à la profondeur limite, l'évaluation peut être trompeuse si une capture imminente n'est pas considérée. La quiescence search continue la recherche au-delà de la profondeur limite, mais <em>uniquement sur les coups "instables"</em> (coups qui changent drastiquement la position). Pour Oxono, cela pourrait signifier : continuer à explorer si un coup crée une menace immédiate de victoire.</p>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="code"><span class="num">05</span> De la théorie au code</h2>
+
+<h3 id="architecture">5.1 — Architecture recommandée</h3>
+
+<pre><code><span class="kmt"># my_agent.py</span>
+
+<span class="kw">import</span> math, time, random
+<span class="kw">from</span> agent <span class="kw">import</span> Agent
+<span class="cmt"># (copy est nécessaire si state.copy() n'existe pas)</span>
+
+<span class="kw">class</span> <span class="fn">MyAgent</span>(Agent):
+    
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        <span class="cmt"># Initialisation : tables de transposition, stats, etc.</span>
+        self.transposition_table = {}
+        self.player = <span class="kw">None</span>
+    
+    <span class="kw">def</span> <span class="fn">act</span>(self, state, remaining_time):
+        <span class="cmt"># Point d'entrée principal</span>
+        <span class="kw">if</span> self.player <span class="kw">is None</span>:
+            self.player = state.to_move  <span class="cmt"># mémorise notre couleur</span>
+        
+        <span class="cmt"># Budget temps : garde une marge de sécurité</span>
+        time_limit = <span class="fn">min</span>(<span class="num-lit">5.0</span>, remaining_time * <span class="num-lit">0.05</span>)
+        
+        <span class="kw">return</span> self.<span class="fn">iterative_deepening</span>(state, time_limit)
+    
+    <span class="kw">def</span> <span class="fn">evaluate</span>(self, state, player):
+        <span class="cmt"># Ta fonction d'évaluation heuristique</span>
+        <span class="cmt"># Retourne un score du point de vue de player</span>
+        <span class="kw">pass</span>
+    
+    <span class="kw">def</span> <span class="fn">alphabeta</span>(self, state, depth, alpha, beta, player):
+        <span class="cmt"># Algorithme Alpha-Beta récursif</span>
+        <span class="kw">pass</span>
+    
+    <span class="kw">def</span> <span class="fn">iterative_deepening</span>(self, state, time_limit):
+        <span class="cmt"># Iterative deepening avec contrainte de temps</span>
+        <span class="kw">pass</span></code></pre>
+
+<h3 id="evaloxono">5.2 — Implémentation de l'évaluation pour Oxono</h3>
+
+<pre><code><span class="kw">def</span> <span class="fn">evaluate</span>(self, state, player):
+    <span class="cmt"># Si partie terminée : retourner l'utilité exacte</span>
+    <span class="kw">if</span> game.is_terminal(state):
+        <span class="kw">return</span> game.utility(state, player)
+    
+    score = <span class="num-lit">0.0</span>
+    opponent = get_opponent(player)
+    
+    <span class="cmt"># Feature 1 : alignements partiels (lignes de 2 et 3)</span>
+    <span class="kw">for</span> line <span class="kw">in</span> get_all_lines(state):  <span class="cmt"># toutes lignes horiz/vert de 4</span>
+        player_count = count_pieces(line, player)
+        opp_count = count_pieces(line, opponent)
+        empty_count = count_empty(line)
+        
+        <span class="kw">if</span> opp_count == <span class="num-lit">0</span>:  <span class="cmt"># ligne non bloquée par adversaire</span>
+            <span class="kw">if</span> player_count == <span class="num-lit">3</span>: score += <span class="num-lit">100</span>  <span class="cmt"># menace directe!</span>
+            <span class="kw">elif</span> player_count == <span class="num-lit">2</span>: score += <span class="num-lit">10</span>
+            <span class="kw">elif</span> player_count == <span class="num-lit">1</span>: score += <span class="num-lit">1</span>
+        
+        <span class="kw">if</span> player_count == <span class="num-lit">0</span>:  <span class="cmt"># menace adverse</span>
+            <span class="kw">if</span> opp_count == <span class="num-lit">3</span>: score -= <span class="num-lit">150</span>  <span class="cmt"># bloquer en priorité!</span>
+            <span class="kw">elif</span> opp_count == <span class="num-lit">2</span>: score -= <span class="num-lit">15</span>
+    
+    <span class="cmt"># Feature 2 : même chose pour les alignements par symbole</span>
+    <span class="cmt"># (X vs O indépendamment de la couleur)</span>
+    <span class="cmt"># ... code similaire ...</span>
+    
+    <span class="kw">return</span> score</code></pre>
+
+<div class="box warning">
+  <div class="box-title">⚠ Important : les lignes dans Oxono</div>
+  <p>Dans Oxono, un alignement gagnant nécessite 4 pièces <em>de même couleur</em> OU <em>de même symbole</em>. Ton évaluation doit donc vérifier les deux types d'alignements !</p>
+</div>
+
+<h3>5.3 — Gestion du temps</h3>
+
+<pre><code><span class="kw">def</span> <span class="fn">iterative_deepening</span>(self, state, time_limit):
+    start_time = time.time()
+    best_action = random.choice(game.actions(state))  <span class="cmt"># fallback sécuritaire</span>
+    depth = <span class="num-lit">1</span>
+    
+    <span class="kw">while</span> True:
+        elapsed = time.time() - start_time
+        <span class="kw">if</span> elapsed >= time_limit:
+            <span class="kw">break</span>
+        
+        <span class="cmt"># Passe le temps restant pour permettre à alphabeta de s'arrêter</span>
+        remaining = time_limit - elapsed
+        self.start_time = time.time()
+        self.time_limit = remaining
+        
+        <span class="kw">try</span>:
+            value, action = self.<span class="fn">alphabeta</span>(state, depth, -<span class="fn">float</span>(<span class="str">'inf'</span>),
+                                              +<span class="fn">float</span>(<span class="str">'inf'</span>), self.player)
+            <span class="kw">if</span> action <span class="kw">is not None</span>:
+                best_action = action
+        <span class="kw">except</span> TimeoutError:
+            <span class="kw">break</span>
+        
+        depth += <span class="num-lit">1</span>
+    
+    <span class="kw">return</span> best_action</code></pre>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="pièges"><span class="num">06</span> Pièges fréquents et erreurs à éviter</h2>
+
+<table>
+  <tr><th>Erreur</th><th>Symptôme</th><th>Correction</th></tr>
+  <tr>
+    <td>Ne pas copier l'état avant apply()</td>
+    <td>L'arbre s'effondre, les branches partagent le même état modifié</td>
+    <td>Toujours <code>new_state = state.copy()</code> avant <code>game.apply(new_state, action)</code></td>
+  </tr>
+  <tr>
+    <td>Confondre "player" et "to_move"</td>
+    <td>L'agent joue comme s'il était l'adversaire à certains nœuds</td>
+    <td><code>player</code> reste fixe (notre couleur). <code>to_move(state)</code> change à chaque niveau.</td>
+  </tr>
+  <tr>
+    <td>Appeler eval sur un état terminal</td>
+    <td>Score heuristique faux pour les états finaux</td>
+    <td>Toujours vérifier <code>is_terminal</code> avant d'appeler l'évaluation heuristique</td>
+  </tr>
+  <tr>
+    <td>Oublier result = -result dans MCTS</td>
+    <td>Les nœuds MIN accumulent des gains de MAX</td>
+    <td>Inverser le résultat à chaque niveau lors de la backpropagation</td>
+  </tr>
+  <tr>
+    <td>α et β non transmis correctement</td>
+    <td>Aucun élagage ne se produit ou l'élagage est incorrect</td>
+    <td>alpha/beta se mettent à jour <em>localement</em> mais sont transmis aux enfants par les valeurs courantes</td>
+  </tr>
+  <tr>
+    <td>Budget temps mal géré</td>
+    <td>L'agent dépasse 5 min et perd automatiquement</td>
+    <td>Iterative deepening + vérification du temps à chaque appel récursif (ou tous les N nœuds)</td>
+  </tr>
+  <tr>
+    <td>Retourner une action invalide</td>
+    <td>Perte immédiate</td>
+    <td>Toujours initialiser best_action avec un coup légal aléatoire avant la recherche</td>
+  </tr>
+  <tr>
+    <td>Éval non nulle en début de partie pour les deux joueurs</td>
+    <td>L'agent est biaisé dès le début</td>
+    <td>Éval(état initial, MAX) ≈ Éval(état initial, MIN) ≈ 0</td>
+  </tr>
+</table>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="comparison"><span class="num">07</span> Alpha-Beta vs MCTS : quand choisir quoi ?</h2>
+
+<table>
+  <tr><th></th><th>Alpha-Beta</th><th>MCTS</th></tr>
+  <tr><td><strong>Besoin d'une bonne éval</strong></td><td>Oui, critique</td><td>Non (peut fonctionner avec rollout aléatoire)</td></tr>
+  <tr><td><strong>Grand facteur de branchement</strong></td><td>Difficile</td><td>Gère bien</td></tr>
+  <tr><td><strong>Tactique profonde</strong></td><td>Bon</td><td>Peut rater</td></tr>
+  <tr><td><strong>Anytime</strong></td><td>Avec itérative deepening</td><td>Naturellement anytime</td></tr>
+  <tr><td><strong>Mémoire</strong></td><td>O(b·d) + transposition table</td><td>Proportionnel aux simulations</td></tr>
+  <tr><td><strong>Pour Oxono</strong></td><td>Bon si bonne éval, d=4-6 atteignable</td><td>Bon si rollout policy correcte</td></tr>
+</table>
+
+<p>Pour Oxono, le facteur de branchement est modéré (pas aussi grand que Go). <strong>Alpha-Beta avec une bonne évaluation</strong> est souvent le meilleur choix. MCTS est une excellente alternative si tu as du mal à concevoir une bonne fonction d'évaluation.</p>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="plan"><span class="num">08</span> Plan concret d'implémentation</h2>
+
+<ol>
+  <li><strong>Lire et comprendre <code>oxono.py</code></strong> : comprendre la structure de <code>State</code>, comment copier un état, le format des actions retournées par <code>game.actions()</code>.</li>
+  <li><strong>Implémenter un agent Minimax de base</strong> (profondeur 2) pour vérifier que la mécanique fonctionne. Joue une partie complète.</li>
+  <li><strong>Ajouter Alpha-Beta</strong> et vérifier qu'il retourne le même résultat que Minimax pour profondeur 2.</li>
+  <li><strong>Ajouter la limite de profondeur et une évaluation triviale</strong> (ex: compte les pièces, profondeur 3).</li>
+  <li><strong>Implémenter iterative deepening</strong> avec contrainte de temps. Test : le temps de décision reste ≤ 5s.</li>
+  <li><strong>Améliorer la fonction d'évaluation</strong> : alignements partiels, menaces de l'adversaire, position des totems.</li>
+  <li><strong>Tester contre l'agent aléatoire</strong> : tu devrais gagner quasi systématiquement.</li>
+  <li><strong>Optionnel : implémenter MCTS</strong> ou ajouter move ordering / transposition table.</li>
+  <li><strong>Benchmarking systématique</strong> : 20-50 parties contre chaque agent de référence, noter win rate.</li>
+  <li><strong>Rédiger le rapport</strong> avec les résultats expérimentaux.</li>
+</ol>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<h2 id="checklists"><span class="num">09</span> Checklists finales</h2>
+
+<h3>Checklist de maîtrise — Questions pour vérifier ta compréhension</h3>
+<ul class="checklist">
+  <li>Peux-tu expliquer pourquoi MIN cherche à minimiser le score de MAX (et pas à maximiser le sien) ?</li>
+  <li>Dans Minimax, le paramètre <code>player</code> change-t-il entre les niveaux de récursion ? Pourquoi ?</li>
+  <li>Alpha-Beta donne-t-il le même résultat que Minimax ? Toujours ?</li>
+  <li>Quand déclenche-t-on un α-cutoff ? Un β-cutoff ? Donne un exemple concret.</li>
+  <li>Dans UCT, que se passe-t-il si N(nœud) = 0 ? Pourquoi est-ce important ?</li>
+  <li>Pourquoi inverse-t-on le résultat dans la backpropagation de MCTS ?</li>
+  <li>Quelle est la différence entre choisir l'enfant le plus visité vs l'enfant avec le meilleur Q/N à la fin de MCTS ?</li>
+  <li>Qu'est-ce que l'effet d'horizon ? Comment le quiescence search y remédie ?</li>
+  <li>Pourquoi iterative deepening ne "gaspille" pas vraiment de temps recalculant les profondeurs inférieures ?</li>
+  <li>Pour Oxono : quels types d'alignements dois-tu vérifier dans ta fonction d'évaluation ?</li>
+</ul>
+
+<h3>Checklist d'implémentation — Étapes dans l'ordre</h3>
+<ul class="checklist">
+  <li>Lire entièrement <code>oxono.py</code> et <code>agent.py</code></li>
+  <li>Comprendre le format d'une action (type, contenu)</li>
+  <li>Implémenter <code>state.copy()</code> ou vérifier qu'elle existe</li>
+  <li>Implémenter Minimax pur (profondeur 2, utilité exacte)</li>
+  <li>Vérifier : Minimax gagne contre random agent</li>
+  <li>Ajouter Alpha-Beta (vérifier : même résultat que Minimax)</li>
+  <li>Ajouter profondeur limite + eval heuristique triviale</li>
+  <li>Ajouter iterative deepening + gestion du temps</li>
+  <li>Vérifier : aucun dépassement de temps sur 10 parties</li>
+  <li>Améliorer la fonction d'évaluation (alignements partiels)</li>
+  <li>Ajouter move ordering (coups menaçants en premier)</li>
+  <li>Benchmarker : win rate vs random, greedy, alphabeta de base</li>
+  <li>Optionnel : transposition table, MCTS, quiescence search</li>
+  <li>Documenter le code (docstrings)</li>
+  <li>Soumettre sur Inginious avant la deadline</li>
+</ul>
+
+<h3>Points encore difficiles</h3>
+<ul>
+  <li><strong>Concevoir une bonne évaluation pour Oxono</strong> : c'est la partie la plus ouverte et la plus importante. Il n'y a pas de recette universelle — il faut expérimenter.</li>
+  <li><strong>La gestion du temps avec iterative deepening</strong> : il faut vérifier le temps <em>pendant</em> la recherche pour couper proprement, pas seulement entre les profondeurs.</li>
+  <li><strong>Les règles spéciales d'Oxono</strong> (Totem entouré, destination entourée) : assure-toi de bien les comprendre pour ne pas générer des actions invalides.</li>
+  <li><strong>Le signe du résultat dans MCTS</strong> : la backpropagation avec inversion du signe est souvent source de bugs subtils.</li>
+</ul>
+
+<h3>Mini plan de révision</h3>
+<ol>
+  <li>Relis la section <strong>Minimax</strong> (pseudo-code + exécution manuelle).</li>
+  <li>Code Minimax, teste-le, assure-toi qu'il fonctionne.</li>
+  <li>Relis la section <strong>Alpha-Beta</strong> (comprendre α et β avec l'analogie).</li>
+  <li>Ajoute Alpha-Beta, vérifie l'identité avec Minimax.</li>
+  <li>Relis la section <strong>Iterative Deepening + gestion du temps</strong>.</li>
+  <li>Relis la section <strong>Évaluation pour Oxono</strong> — brainstorme tes features.</li>
+  <li>Si tu veux MCTS : relis les <strong>4 phases</strong> et l'<strong>inversion dans backprop</strong>.</li>
+</ol>
+
+<hr>
+<p style="color: var(--muted); font-size: 12px; font-family: 'IBM Plex Mono', monospace; text-align: center; padding: 20px 0;">
+  LINFO1361 · Adversarial Search · cours orienté implémentation · 2026
+</p>
+
+</main>
+</body>
+</html>
