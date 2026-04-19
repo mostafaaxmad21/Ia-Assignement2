@@ -319,7 +319,7 @@ Verdict :
 Pourquoi :
 Lajout d'une heuristique lié au nombre de pions allignés par ligne et colonne montre bien que l'algorithme se guide mieux que si il n'y en a pas du tout malgré le fait que ce n'est pas encore parfait ( prend pas en compte si c accessible directement , si c'est possible etc )
 
-### Test 005 - MyAgent ameliore vs Alignement Naif Global
+### Test 005 - Fenetres Gagnantes vs Alignement Naif Global
 
 Version :
 
@@ -327,11 +327,11 @@ my_agent.py
 
 Modification :
 
-Reprise du scoring naif global comme base principale, ajout d'un bonus secondaire par fenetres couleur, et ajout d'une ouverture fixe simple pour `p0`.
+Remplacement du scoring naif par un scoring par fenetres de 4 cases glissantes, avec ponderation `1 / 20 / 500`, une passe couleur, une passe symbole, et une ouverture fixe simple pour `p0`.
 
 Hypothese :
 
-Cette version de `my_agent.py` doit faire au moins aussi bien que `naive_global_alignment_agent.py`, et idealement le battre dans les deux couleurs.
+Cette nouvelle evaluation doit mieux distinguer les vraies menaces de victoire qu'un simple comptage global des alignements, et donc battre `naive_global_alignment_agent.py` dans les deux couleurs.
 
 Adversaires testes :
 
@@ -355,8 +355,8 @@ Resultats :
 - victoires : 10
 - defaites : 0
 - nulles : 0
-- longueur moyenne : 13.00 coups
-- temps moyen (si dispo) : 0.008409 s par coup
+- longueur moyenne : 15.00 coups
+- temps moyen (si dispo) : 0.015126 s par coup
 
 #### Match B
 
@@ -376,11 +376,11 @@ Resultats :
 - victoires : 10
 - defaites : 0
 - nulles : 0
-- longueur moyenne : 24.00 coups
-- temps moyen (si dispo) : 0.008367 s par coup
+- longueur moyenne : 10.00 coups
+- temps moyen (si dispo) : 0.032965 s par coup
 
 Verdict :
 - garde
 
 Pourquoi :
-Cette amelioration est finalement conforme a ce qui etait attendu apres recalibrage. Les premiers essais avaient montre qu'ajouter trop de bonus (notamment autour des fenetres et du symbole) degradait l'evaluation au lieu de l'ameliorer. La version retenue garde une base solide avec le scoring naif global, puis ajoute seulement un bonus secondaire par fenetres couleur. Sur les tests, cette version bat `naive_global_alignment_agent.py` dans les deux sens (10/10 en `p0` et 10/10 en `p1`), ce qui montre que l'evaluation guide mieux la recherche tout en restant assez simple et stable.
+Cette version est gardee car elle corrige une faiblesse importante du scoring naif : elle ne valorise plus simplement des alignements presents sur le plateau, mais seulement des menaces qui s'inscrivent dans une vraie fenetre de 4 cases pouvant mener a une victoire. La forte ponderation des fenetres a 3 pieces donne aussi plus d'importance aux menaces immediates. En test, cette evaluation bat `naive_global_alignment_agent.py` dans les deux sens (`10/10` en `p0` et `10/10` en `p1`), ce qui montre qu'elle guide mieux la recherche tout en restant simple a expliquer.
